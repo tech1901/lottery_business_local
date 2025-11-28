@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lottery Result Extractor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Lottery Result Extractor</h1>
+    <div class="container">
+        <div class="upload-section">
+            <input type="file" id="image-upload" accept="image/png, image/jpeg">
+        </div>
+        <div class="image-container">
+            <img id="uploaded-image" src="" alt="Lottery Poster">
+            <div class="crop-box" id="crop-box-1"><span>1st Prize</span><div class="resize-handle"></div></div>
+            <div class="crop-box" id="crop-box-2"><span>2nd Prize</span><div class="resize-handle"></div></div>
+            <div class="crop-box" id="crop-box-3"><span>3rd Prize</span><div class="resize-handle"></div></div>
+            <div class="crop-box" id="crop-box-4"><span>4th Prize</span><div class="resize-handle"></div></div>
+            <div class="crop-box" id="crop-box-5"><span>5th Prize</span><div class="resize-handle"></div></div>
+        </div>
+        <div class="controls-section">
+            <div class="control-group">
+                <label for="result-date">Result Date:</label>
+                <input type="date" id="result-date">
+            </div>
+            <div class="control-group">
+                <label for="draw-time">Draw Time:</label>
+                <select id="draw-time">
+                    <option value="">--Select Draw--</option>
+                    <option value="1PM">1:00 PM</option>
+                    <option value="6PM">6:00 PM</option>
+                    <option value="8PM">8:00 PM</option>
+                </select>
+            </div>
+        </div>
+
+        <button id="extract-btn">Extract Numbers</button>
+
+        <div class="results-section">
+            <h2 id="results-header">Extracted Numbers</h2>
+            <table id="results-table">
+                <thead>
+                    <tr>
+                        <th>Prize Category</th>
+                        <th>Prize Amount</th>
+                        <th>Ticket Numbers</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <button id="save-result-btn" style="display: none;">Save Result</button>
+            <button id="download-csv-btn">Download CSV</button>
+        </div>
+
+        <div class="reports-section">
+            <h2>Saved Reports</h2>
+            <div id="reports-list" class="reports-grid"></div>
+        </div>
+    </div>
+
+    <!-- The Modal -->
+    <div id="draws-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3 id="modal-title"></h3>
+            <ul id="modal-draws-list"></ul>
+        </div>
+    </div>
+
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+    <script src="app.js"></script>
+</body>
+</html>
