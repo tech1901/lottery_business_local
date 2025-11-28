@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Reports</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="reports.css">
+</head>
+<body>
+    <div class="container">
+        <header class="reports-header">
+            <h1>All Saved Reports</h1>
+            <button id="delete-all-btn" class="danger-btn">Delete All Data</button>
+        </header>
+        <main id="reports-container">
+            <!-- Date cards will be dynamically loaded here -->
+        </main>
+    </div>
+
+    <!-- Draw Time Selection Modal -->
+    <div id="draw-time-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="draw-time-modal-title">Select Draw Time for <span id="selected-date-display"></span></h3>
+            <div id="draw-time-options" class="modal-options-container">
+                <!-- Draw time buttons will be injected here -->
+            </div>
+            <div class="modal-actions">
+                <button class="close-modal-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Selection Modal -->
+    <div id="customer-choice-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="customer-choice-modal-title">Select Customer for <span id="selected-draw-time-display"></span></h3>
+            <div id="customer-options" class="modal-options-container">
+                <!-- Customer buttons will be injected here -->
+            </div>
+            <div class="modal-actions">
+                <button class="close-modal-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="reports.js"></script>
+</body>
+</html>

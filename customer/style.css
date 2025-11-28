@@ -1,0 +1,393 @@
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --background-color: #ecf0f1;
+    --white-color: #ffffff;
+    --light-gray-color: #bdc3c7;
+    --dark-gray-color: #7f8c8d;
+    --error-color: #e74c3c;
+    --success-color: #2ecc71;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: var(--background-color);
+    margin: 0;
+    padding: 20px;
+}
+
+.app-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: var(--white-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.app-header {
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.app-header h1 {
+    margin: 0;
+    font-size: 1.5em;
+}
+
+.header-controls {
+    display: flex;
+    gap: 15px;
+}
+
+.header-controls select, .header-controls input, .header-controls button {
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid var(--light-gray-color);
+    background-color: var(--white-color);
+}
+
+#view-result-btn {
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    cursor: pointer;
+}
+
+.app-main {
+    padding: 20px;
+}
+
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+#customer-table, #prize-result-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+}
+
+#customer-table th, #customer-table td, #prize-result-table th, #prize-result-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+    white-space: nowrap;
+}
+
+#customer-table th, #prize-result-table th {
+    background-color: #f2f2f2;
+    font-weight: 600;
+}
+
+#customer-table input[type="text"], #customer-table input[type="number"] {
+    width: 90%;
+    padding: 6px;
+    border: 1px solid var(--light-gray-color);
+    border-radius: 4px;
+}
+
+.purchase-inputs {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.purchase-inputs input {
+    width: 60px;
+}
+
+.sold-preview {
+    white-space: normal;
+}
+
+.sold-more-link {
+    color: var(--secondary-color);
+    cursor: pointer;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.sold-expanded-view {
+    background-color: #f8f9fa;
+    padding: 15px;
+    margin-top: 10px;
+}
+
+.sold-chip-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-height: 150px;
+    overflow-y: auto;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.sold-chip {
+    background-color: #e9ecef;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.85em;
+}
+
+.winning-chip {
+    background-color: #28a745; /* Green for winning */
+    color: var(--white-color);
+    font-weight: bold;
+}
+
+/* Category-specific colors */
+.prize-cat-1 { color: #e74c3c; } /* Red */
+.prize-cat-2 { color: #e67e22; } /* Orange */
+.prize-cat-3 { color: #3498db; } /* Blue */
+.prize-cat-4 { color: #9b59b6; } /* Purple */
+.prize-cat-5 { color: #1abc9c; } /* Teal */
+
+/* Background colors for chips */
+.winning-chip.prize-cat-1 { background-color: #c0392b; color: white; }
+.winning-chip.prize-cat-2 { background-color: #d35400; color: white; }
+.winning-chip.prize-cat-3 { background-color: #2980b9; color: white; }
+.winning-chip.prize-cat-4 { background-color: #8e44ad; color: white; }
+.winning-chip.prize-cat-5 { background-color: #16a085; color: white; }
+
+.pwt-winner-info {
+    font-size: 0.85em;
+    margin-left: 4px;
+}
+
+.winning-cell {
+    font-weight: bold;
+    color: #28a745;
+}
+
+.copy-sold-btn {
+    background: none;
+    border: 1px solid var(--secondary-color);
+    color: var(--secondary-color);
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.unsold-display {
+    margin-top: 5px;
+    word-break: break-all;
+    white-space: normal;
+}
+
+.invalid-number {
+    color: var(--error-color);
+    font-weight: bold;
+}
+
+.table-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    align-items: center;
+}
+
+#add-customer-btn, #submit-all-data-btn {
+    background-color: var(--secondary-color);
+    color: var(--white-color);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+#add-customer-btn:hover, #submit-all-data-btn:hover {
+    opacity: 0.9;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: var(--white-color);
+    padding: 30px;
+    border-radius: 8px;
+    width: 90%; /* Flexible width */
+    max-width: 500px; /* Increased max-width for better table display */
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    position: relative; /* Needed for absolute positioning of close button */
+}
+
+.modal-content.small-modal {
+    max-width: 300px;
+}
+
+/* Specific styles for the Prize Result Modal */
+#prize-result-modal .modal-content {
+    max-width: 700px; /* Allow wider for the table */
+}
+
+#prize-result-modal .modal-content .table-container-wrapper {
+    overflow-x: auto; /* Enable horizontal scrolling for the table */
+    margin-top: 15px;
+}
+
+#prize-result-table {
+    min-width: 100%; /* Ensure table takes full width of its container */
+}
+
+#prize-result-table th, #prize-result-table td {
+    white-space: normal; /* Allow text to wrap */
+}
+
+#prize-result-table td:last-child { /* Target the Ticket Numbers column */
+    word-break: break-all; /* Break long words */
+}
+
+.modal-content h3 {
+    margin-top: 0;
+    color: var(--primary-color);
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--light-gray-color);
+    border-radius: 4px;
+}
+
+.modal-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.modal-actions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#submit-customer-btn, #add-same-sem-btn, #add-different-sem-btn {
+    background-color: var(--secondary-color);
+    color: var(--white-color);
+}
+
+.close-modal-btn {
+    background-color: var(--light-gray-color);
+}
+
+/* Report Section Styles */
+.report-section {
+    padding: 20px;
+    background-color: var(--background-color);
+    border-top: 1px solid #e0e0e0;
+}
+
+.report-section h2 {
+    color: var(--primary-color);
+    margin-top: 0;
+    margin-bottom: 0; /* Adjusted for header */
+}
+
+.saved-reports-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.view-all-btn {
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    padding: 8px 16px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.view-all-btn:hover {
+    background-color: #3a536e;
+}
+
+.report-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 10px;
+}
+
+.report-card {
+    background-color: var(--white-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    padding: 15px;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    text-align: center;
+}
+
+.report-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+}
+
+.report-card h3 {
+    margin: 0;
+    color: var(--secondary-color);
+    font-size: 1.3em;
+}
+
+.report-card p {
+    margin: 5px 0 0;
+    color: var(--dark-gray-color);
+    font-weight: 500;
+}
+
+/* Customer List in Report Modal */
+.customer-list-container {
+    margin-top: 20px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.customer-list-item {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.customer-list-item:hover {
+    background-color: #e9ecef;
+}

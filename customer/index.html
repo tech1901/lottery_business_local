@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Data Entry</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>Customer Entry</h1>
+            <div class="header-controls">
+                <select id="draw-time-select">
+                    <option value="Morning">Morning</option>
+                    <option value="Noon">Noon</option>
+                    <option value="Evening">Evening</option>
+                </select>
+                <input type="date" id="entry-date">
+                <button id="view-result-btn">View Prize Result</button>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <div class="table-container">
+                <table id="customer-table">
+                    <thead>
+                        <tr>
+                            <th>SL</th>
+                            <th>Name</th>
+                            <th>SEM</th>
+                            <th>Purchase</th>
+                            <th>Unsold</th>
+                            <th>Sold</th>
+                            <th>Winning Tickets</th>
+                            <th>PWT</th>
+                            <th>VC</th>
+                            <th>SVC</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customer-table-body">
+                        <!-- Rows will be added dynamically -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-actions">
+                <button id="add-customer-btn">Add Customer</button>
+                <button id="submit-all-data-btn">Submit All Data</button>
+                <button id="search-unsold-btn">Search Unsold</button>
+                <button id="debug-btn" style="background-color: #e67e22;">Debug</button>
+            </div>
+        </main>
+
+        <section class="report-section">
+            <div class="saved-reports-header">
+                <h2>Saved Reports</h2>
+                <a href="reports.html" class="view-all-btn">View All</a>
+            </div>
+            <div id="report-cards-container" class="report-cards-container">
+                <!-- Report cards will be loaded here -->
+            </div>
+        </section>
+    </div>
+
+    <!-- Modals -->
+    <div id="add-customer-modal" class="modal">
+        <div class="modal-content">
+            <h3>Add New Customer</h3>
+            <div class="form-group">
+                <label for="customer-name-input">Customer Name:</label>
+                <input type="text" id="customer-name-input" placeholder="Enter name">
+            </div>
+            <div class="form-group">
+                <label for="sem-type-select">SEM Type:</label>
+                <select id="sem-type-select">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                    <option value="20">20</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button id="submit-customer-btn">Submit</button>
+                <button class="close-modal-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-customer-modal" class="modal">
+        <div class="modal-content">
+            <h3>Edit Customer</h3>
+            <div class="form-group">
+                <label for="edit-customer-name-input">Customer Name:</label>
+                <input type="text" id="edit-customer-name-input" placeholder="Enter name">
+            </div>
+            <div class="form-group">
+                <label for="edit-sem-type-select">SEM Type:</label>
+                <select id="edit-sem-type-select">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                    <option value="20">20</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button id="update-customer-btn">Update</button>
+                <button class="close-modal-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="sold-numbers-modal" class="modal">
+        <div class="modal-content">
+            <h3>Sold Ticket Numbers</h3>
+            <div id="sold-numbers-chip-container" class="sold-chip-container">
+                <!-- Individual number chips will be injected here -->
+            </div>
+            <div class="modal-actions">
+                <button id="copy-all-sold-btn">Copy All</button>
+                <button class="close-modal-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="unsold-numbers-modal" class="modal">
+        <div class="modal-content">
+            <h3>Unsold Ticket Numbers</h3>
+            <div id="unsold-numbers-chip-container" class="sold-chip-container">
+                <!-- Individual number chips will be injected here -->
+            </div>
+            <div class="modal-actions">
+                <button class="close-modal-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="prize-result-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="prize-result-title">Prize Result</h3>
+            <div class="table-container-wrapper">
+                <table id="prize-result-table">
+                    <thead>
+                        <tr>
+                            <th>Prize Category</th>
+                            <th>Ticket Numbers</th>
+                        </tr>
+                    </thead>
+                    <tbody id="prize-result-table-body">
+                        <!-- Results will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-actions">
+                <button class="close-modal-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="winning-numbers-modal" class="modal">
+        <div class="modal-content">
+            <h3>Winning Ticket Numbers</h3>
+            <div id="winning-numbers-chip-container" class="sold-chip-container">
+                <!-- Individual winning number chips will be injected here -->
+            </div>
+            <div class="modal-actions">
+                <button class="close-modal-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="report-detail-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="report-detail-title">Customers for <span id="report-date-display"></span></h3>
+            <div id="customer-list-container" class="customer-list-container">
+                <!-- Customer names will be injected here -->
+            </div>
+            <div class="modal-actions">
+                <button class="close-modal-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="search-unsold-modal" class="modal">
+        <div class="modal-content">
+            <h3>Search Unsold Tickets</h3>
+            <div class="form-group">
+                <label for="search-customer-name-input">Customer Name:</label>
+                <input type="text" id="search-customer-name-input" placeholder="Enter customer name">
+            </div>
+            <div class="form-group">
+                <label for="search-unsold-numbers-input">Unsold Numbers:</label>
+                <input type="text" id="search-unsold-numbers-input" placeholder="Enter unsold numbers, separated by commas">
+            </div>
+            <div class="modal-actions">
+                <button id="submit-search-unsold-btn">Search</button>
+                <button class="close-modal-btn">Cancel</button>
+            </div>
+            <div id="search-unsold-results-container" class="search-results-container">
+                <!-- Search results will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+
+    <!-- Prize Category Modal -->
+    <div id="prize-category-modal" class="modal">
+        <div class="modal-content small-modal">
+            <h3 id="prize-category-modal-title">Prize Category</h3>
+            <p id="prize-category-modal-text" style="text-align: center; font-size: 1.2em; font-weight: bold;"></p>
+            <div class="modal-actions">
+                <button class="close-modal-btn">Close</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
