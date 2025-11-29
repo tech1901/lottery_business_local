@@ -20,20 +20,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const entryDate = document.getElementById('entry-date');
     const drawTimeSelect = document.getElementById('draw-time-select');
     const addCustomerBtn = document.getElementById('add-customer-btn');
-    const addCustomerModal = document.getElementById('add-customer-modal');
     const soldNumbersModal = document.getElementById('sold-numbers-modal');
     const unsoldNumbersModal = document.getElementById('unsold-numbers-modal');
     const prizeResultModal = document.getElementById('prize-result-modal');
     const winningNumbersModal = document.getElementById('winning-numbers-modal');
     const prizeCategoryModal = document.getElementById('prize-category-modal');
     const customerNameInput = document.getElementById('customer-name-input');
-    const semTypeSelect = document.getElementById('sem-type-select');
-    const submitCustomerBtn = document.getElementById('submit-customer-btn');
     const soldNumbersChipContainer = document.getElementById('sold-numbers-chip-container');
     const unsoldNumbersChipContainer = document.getElementById('unsold-numbers-chip-container');
     const editCustomerModal = document.getElementById('edit-customer-modal');
     const editCustomerNameInput = document.getElementById('edit-customer-name-input');
     const editSemTypeSelect = document.getElementById('edit-sem-type-select');
+    const editPurchaseInput = document.getElementById('edit-purchase-input');
+    const editUnsoldInput = document.getElementById('edit-unsold-input');
     const updateCustomerBtn = document.getElementById('update-customer-btn');
     const copyAllSoldBtn = document.getElementById('copy-all-sold-btn');
     const prizeResultTitle = document.getElementById('prize-result-title');
@@ -125,20 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         fullReportData.forEach(row => {
             summary.totalSoldCount += (row.soldNumbers || []).length;
-            
-            const purchaseRanges = (row.purchaseRanges || '').split(',').map(r => r.trim()).filter(Boolean);
-            for (const range of purchaseRanges) {
-                const parts = range.split('-').map(p => p.trim());
-                if (parts.length === 2) {
-                    const from = parseInt(parts[0], 10);
-                    const to = parseInt(parts[1], 10);
-                    if (!isNaN(from) && !isNaN(to) && to >= from) {
-                        summary.totalPurchaseCount += (to - from + 1);
-                    }
-                } else if (parts.length === 1) {
-                    summary.totalPurchaseCount++;
-                }
-            }
+            summary.totalPurchaseCount += (row.purchaseCount || 0);
 
             (row.pwtBreakdown || []).forEach(item => summary.totalPWT += parseAmount(item));
             (row.vcBreakdown || []).forEach(item => summary.totalVC += parseAmount(item));
@@ -273,6 +259,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // saveReport(entryDate.value, drawTimeSelect.value, tableData);
     }
 
+
+
     function deleteCustomer(customerName) {
         if (!confirm(`Are you sure you want to delete all entries for ${customerName}?`)) return;
         tableData = tableData.filter(row => row.name !== customerName);
@@ -281,74 +269,231 @@ document.addEventListener('DOMContentLoaded', () => {
         // saveReport(entryDate.value, drawTimeSelect.value, tableData);
     }
 
+    function getTruncatedText(text, maxLength, index, linkClass) {
+        if (!text || text.length <= maxLength) {
+            return text;
+        }
+        return `${text.substring(0, maxLength)}... <span class="${linkClass}" data-index="${index}">(see more)</span>`;
+    }
+
+    function getGroupedData() {
+        const groupedData = [];
+        if (tableData.length === 0) {
+            return groupedData;
+        }
+
+        let currentCustomerName = tableData[0].name;
+        let currentCustomerRows = [];
+
+        tableData.forEach(row => {
+            if (row.name !== currentCustomerName) {
+                groupedData.push({
+                    customerName: currentCustomerName,
+                    rows: currentCustomerRows,
+                    summary: calculateCustomerSummary(currentCustomerRows)
+                });
+                currentCustomerName = row.name;
+                currentCustomerRows = [];
+            }
+            currentCustomerRows.push(row);
+        });
+
+        groupedData.push({
+            customerName: currentCustomerName,
+            rows: currentCustomerRows,
+            summary: calculateCustomerSummary(currentCustomerRows)
+        });
+
+        return groupedData;
+    }
+
+    function calculateCustomerSummary(rows) {
+        const summary = {
+            totalPurchase: 0,
+            totalUnsold: 0,
+            totalSold: 0,
+            totalWinningTickets: 0,
+            totalPWT: 0,
+            totalVC: 0,
+            totalSVC: 0,
+        };
+
+        rows.forEach(rowData => {
+            let numberOfTickets = 0;
+            const purchaseRanges = (rowData.purchaseRanges || '').split(',').map(r => r.trim()).filter(Boolean);
+            for (const range of purchaseRanges) {
+                const parts = range.split('-').map(p => p.trim());
+                if (parts.length === 2) {
+                    const parsedFrom = parseAlphanumericTicket(parts[0]);
+                    const parsedTo = parseAlphanumericTicket(parts[1]);
+                    const numericFrom = parsedFrom.numericPart;
+                    const numericTo = parsedTo.numericPart;
+                    if (!isNaN(numericFrom) && !isNaN(numericTo) && numericTo >= numericFrom) {
+                        numberOfTickets += (numericTo - numericFrom + 1);
+                    }
+                } else if (parts.length === 1) {
+                    numberOfTickets++;
+                }
+            }
+            summary.totalPurchase += numberOfTickets * (parseInt(rowData.sem, 10) || 0);
+            summary.totalUnsold += (rowData.unsoldNumbers || []).length;
+            summary.totalSold += (rowData.soldNumbers || []).length;
+            summary.totalWinningTickets += (rowData.winningTickets || []).length;
+
+            (rowData.pwtBreakdown || []).forEach(item => {
+                summary.totalPWT += parsePrizeAmount(item);
+            });
+            (rowData.vcBreakdown || []).forEach(item => {
+                summary.totalVC += parsePrizeAmount(item);
+            });
+            (rowData.svcBreakdown || []).forEach(item => {
+                summary.totalSVC += parsePrizeAmount(item);
+            });
+        });
+
+        return summary;
+    }
+
     function renderTable() {
         customerTableBody.innerHTML = '';
-        let lastCustomerName = null;
-        tableData.forEach((rowData, index) => {
-            rowData.isNameHidden = rowData.name === lastCustomerName;
-            if (!rowData.isNameHidden) {
-                let count = 1;
-                for (let i = index + 1; i < tableData.length && tableData[i].name === rowData.name; i++) count++;
-                rowData.rowspan = count;
-                lastCustomerName = rowData.name;
-            }
-        });
+        const groupedData = getGroupedData();
+        let customerSerial = 0;
 
-        tableData.forEach((rowData, index) => {
-            const tr = document.createElement('tr');
-            tr.dataset.index = index;
-            
-            let cellsHTML = '';
-            if (!rowData.isNameHidden) {
-                cellsHTML += `<td rowspan="${rowData.rowspan}">${index + 1}</td>`;
-                cellsHTML += `<td rowspan="${rowData.rowspan}">
-                                ${rowData.name} 
-                                <i class="fas fa-user-times delete-customer" data-customer-name="${rowData.name}" title="Delete all entries for ${rowData.name}"></i>
+        groupedData.forEach(customerGroup => {
+            customerSerial++;
+            const customerRows = customerGroup.rows;
+            const summary = customerGroup.summary;
+
+            customerRows.forEach((rowData, rowIndex) => {
+                const tr = document.createElement('tr');
+                const globalIndex = tableData.indexOf(rowData);
+                tr.dataset.index = globalIndex;
+                
+                let cellsHTML = '';
+                if (rowIndex === 0) {
+                    cellsHTML += `<td rowspan="${customerRows.length}">${customerSerial}</td>`;
+                    cellsHTML += `<td rowspan="${customerRows.length}">
+                                    ${customerGroup.customerName} 
+                                    <div class="action-icons">
+                                    <i class="fas fa-user-times delete-customer" data-customer-name="${customerGroup.customerName}" title="Delete all entries for ${customerGroup.customerName}"></i>
+                                  </div>
+                                  </td>`;
+                }
+                
+                cellsHTML += `
+                    <td>${rowData.sem}</td>
+                    <td><input type="text" class="purchase-input" placeholder="e.g., 32180-32199,45630-43649" value="${rowData.purchaseRanges || ''}"></td>
+                    <td>
+                        <input type="text" class="unsold-input" placeholder="e.g., 2251,2252" value="${rowData.unsoldRaw || ''}" ${!rowData.purchaseRanges ? 'disabled' : ''}>
+                        <div class="unsold-display">
+                            ${rowData.unsoldNumbers && rowData.unsoldNumbers.length > 0 ? `${rowData.unsoldNumbers.length} unsold` : ''}
+                            ${rowData.unsoldNumbersWithStatus && rowData.unsoldNumbersWithStatus.filter(n => !n.isValid).length > 0 ? ` <span class="invalid-number">(${rowData.unsoldNumbersWithStatus.filter(n => !n.isValid).length} invalid)</span>` : ''}
+                            ${rowData.unsoldNumbers && rowData.unsoldNumbers.length > 2 ? ` <span class="unsold-more-link" data-index="${globalIndex}">... (see all)</span>` : ''}
+                        </div>
+                    </td>
+                `;
+
+                const soldRanges = rowData.soldRanges || [];
+                let soldHTML = '';
+                if (soldRanges.length > 0) {
+                    const soldText = soldRanges.map(getNumericDisplay).join(', ');
+                    soldHTML = `<div class="sold-preview">${getTruncatedText(soldText, 10, globalIndex, 'sold-more-link')}</div>`;
+                }
+                cellsHTML += `<td>${soldHTML}</td>`;
+
+                const winningTickets = rowData.winningTickets || [];
+                let winningHTML = '';
+                if (winningTickets.length > 0) {
+                    let previewHTML = winningTickets.slice(0, 2).map(wt => {
+                        const categoryClass = getCategoryClass(wt.category);
+                        return `<span class="sold-chip winning-chip winning-ticket-chip ${categoryClass}" data-ticket-category="${wt.category}">${wt.ticket}</span>`;
+                    }).join(' ');
+                    if (winningTickets.length > 2) previewHTML += ` <span class="winning-more-link" data-index="${globalIndex}">... (+${winningTickets.length - 2} more)</span>`;
+                    winningHTML = `<div class="winning-preview">${previewHTML}</div>`;
+                }
+                cellsHTML += `<td>${winningHTML}</td>`;
+
+                const pwtHTML = (rowData.pwtBreakdown || []).join('<br>');
+                const vcHTML = (rowData.vcBreakdown || []).join('<br>');
+                const svcHTML = (rowData.svcBreakdown || []).join('<br>');
+                
+                cellsHTML += `<td>${pwtHTML}</td><td>${vcHTML}</td><td>${svcHTML}</td>`;
+                cellsHTML += `<td>
+                                <div class="action-icons">
+                                    <i class="fas fa-edit edit-sem-row" data-index="${globalIndex}" title="Edit this SEM entry"></i>
+                                    <i class="fas fa-trash-alt delete-sem-row" data-index="${globalIndex}" title="Delete this SEM entry"></i>
+                                </div>
                               </td>`;
-            }
-            cellsHTML += `
-                <td>${rowData.sem}</td>
-                <td><input type="text" class="purchase-input" placeholder="e.g., 32180-32199,45630-43649" value="${rowData.purchaseRanges || ''}"></td>
-                <td>
-                    <input type="text" class="unsold-input" placeholder="e.g., 2251,2252" value="${rowData.unsoldRaw || ''}" ${!rowData.purchaseRanges ? 'disabled' : ''}>
-                    <div class="unsold-display">
-                        ${rowData.unsoldNumbers && rowData.unsoldNumbers.length > 0 ? `${rowData.unsoldNumbers.length} unsold` : ''}
-                        ${rowData.unsoldNumbersWithStatus && rowData.unsoldNumbersWithStatus.filter(n => !n.isValid).length > 0 ? ` <span class="invalid-number">(${rowData.unsoldNumbersWithStatus.filter(n => !n.isValid).length} invalid)</span>` : ''}
-                        ${rowData.unsoldNumbers && rowData.unsoldNumbers.length > 2 ? ` <span class="unsold-more-link" data-index="${index}">... (see all)</span>` : ''}
-                    </div>
-                </td>
+                tr.innerHTML = cellsHTML;
+                customerTableBody.appendChild(tr);
+            });
+
+            // Add summary row for the customer
+            const summaryTr = document.createElement('tr');
+            summaryTr.classList.add('summary-row');
+            summaryTr.innerHTML = `
+                <th colspan="2">Total</th>
+                <th></th>
+                <th>${summary.totalPurchase}</th>
+                <th>${summary.totalUnsold}</th>
+                <th>${summary.totalSold}</th>
+                <th>${summary.totalWinningTickets}</th>
+                <th>${summary.totalPWT.toLocaleString('en-IN')}</th>
+                <th>${summary.totalVC.toLocaleString('en-IN')}</th>
+                <th>${summary.totalSVC.toLocaleString('en-IN')}</th>
+                <th></th>
             `;
-
-            const soldRanges = rowData.soldRanges || [];
-            let soldHTML = '';
-            if (soldRanges.length > 0) {
-                let previewHTML = soldRanges.slice(0, 2).map(getNumericDisplay).join(', ');
-                if (soldRanges.length > 2) previewHTML += ` <span class="sold-more-link" data-index="${index}">... (+${soldRanges.length - 2} more)</span>`;
-                soldHTML = `<div class="sold-preview">${previewHTML}</div>`;
-            }
-            cellsHTML += `<td>${soldHTML}</td>`;
-
-            const winningTickets = rowData.winningTickets || [];
-            let winningHTML = '';
-            if (winningTickets.length > 0) {
-                let previewHTML = winningTickets.slice(0, 2).map(wt => {
-                    const categoryClass = getCategoryClass(wt.category);
-                    return `<span class="sold-chip winning-chip winning-ticket-chip ${categoryClass}" data-ticket-category="${wt.category}">${wt.ticket}</span>`;
-                }).join(' ');
-                if (winningTickets.length > 2) previewHTML += ` <span class="winning-more-link" data-index="${index}">... (+${winningTickets.length - 2} more)</span>`;
-                winningHTML = `<div class="winning-preview">${previewHTML}</div>`;
-            }
-            cellsHTML += `<td>${winningHTML}</td>`;
-
-            const pwtHTML = (rowData.pwtBreakdown || []).join('<br>');
-            const vcHTML = (rowData.vcBreakdown || []).join('<br>');
-            const svcHTML = (rowData.svcBreakdown || []).join('<br>');
-            
-            cellsHTML += `<td>${pwtHTML}</td><td>${vcHTML}</td><td>${svcHTML}</td>`;
-            cellsHTML += `<td><i class="fas fa-edit edit-sem-row" data-index="${index}" title="Edit this SEM entry"></i><i class="fas fa-trash-alt delete-sem-row" data-index="${index}" title="Delete this SEM entry"></i></td>`; // Action column
-            tr.innerHTML = cellsHTML;
-            customerTableBody.appendChild(tr);
+            customerTableBody.appendChild(summaryTr);
         });
+    }
+
+    function renderSummaryRow() {
+        let totalPurchase = 0;
+        let totalUnsold = 0;
+        let totalSold = 0;
+        let totalWinningTickets = 0;
+        let totalPWT = 0;
+        let totalVC = 0;
+        let totalSVC = 0;
+
+        tableData.forEach(rowData => {
+            totalPurchase += (rowData.purchaseCount || 0);
+            totalUnsold += (rowData.unsoldNumbers || []).length;
+            totalSold += (rowData.soldNumbers || []).length;
+            totalWinningTickets += (rowData.winningTickets || []).length;
+
+            (rowData.pwtBreakdown || []).forEach(item => {
+                totalPWT += parsePrizeAmount(item);
+            });
+            (rowData.vcBreakdown || []).forEach(item => {
+                totalVC += parsePrizeAmount(item);
+            });
+            (rowData.svcBreakdown || []).forEach(item => {
+                totalSVC += parsePrizeAmount(item);
+            });
+        });
+
+        let summaryRow = document.querySelector('#customer-table tfoot');
+        if (!summaryRow) {
+            const tfoot = document.createElement('tfoot');
+            document.getElementById('customer-table').appendChild(tfoot);
+            summaryRow = tfoot;
+        }
+
+        summaryRow.innerHTML = `
+            <tr>
+                <th colspan="2">Total</th>
+                <th></th>
+                <th>${totalPurchase}</th>
+                <th>${totalUnsold}</th>
+                <th>${totalSold}</th>
+                <th>${totalWinningTickets}</th>
+                <th>${totalPWT.toLocaleString('en-IN')}</th>
+                <th>${totalVC.toLocaleString('en-IN')}</th>
+                <th>${totalSVC.toLocaleString('en-IN')}</th>
+                <th></th>
+            </tr>
+        `;
     }
 
     function updateRowData(index) {
@@ -357,6 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const purchaseSet = new Set();
         const purchaseRanges = (rowData.purchaseRanges || '').split(',').map(r => r.trim()).filter(Boolean);
+        let numberOfTickets = 0;
         
         for (const range of purchaseRanges) {
             const parts = range.split('-').map(p => p.trim());
@@ -370,14 +516,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const commonPadding = Math.max(parsedFrom.padding, parsedTo.padding);
 
                 if (!isNaN(numericFrom) && !isNaN(numericTo) && numericTo >= numericFrom) {
+                    numberOfTickets += (numericTo - numericFrom + 1);
                     for (let i = numericFrom; i <= numericTo; i++) {
                         purchaseSet.add(formatAlphanumericTicket(commonPrefix, i, commonPadding, commonSuffix));
                     }
                 }
             } else if (parts.length === 1) {
+                numberOfTickets++;
                 purchaseSet.add(parts[0]);
             }
         }
+
+        rowData.purchaseCount = numberOfTickets * (parseInt(rowData.sem, 10) || 0);
+
 
         if (purchaseSet.size === 0) {
             rowData.soldRanges = []; rowData.soldNumbers = []; rowData.winningTickets = [];
@@ -592,13 +743,113 @@ document.addEventListener('DOMContentLoaded', () => {
         customerNames.forEach(name => {
             const item = document.createElement('div');
             item.classList.add('customer-list-item');
-            item.textContent = name;
+            item.innerHTML = `
+                <span>${name}</span>
+                <i class="fas fa-share-alt share-customer-report" data-customer-name="${name}" data-report-key="${reportKey}"></i>
+            `;
             item.dataset.customerName = name;
             item.dataset.reportKey = reportKey;
             customerListContainer.appendChild(item);
         });
 
         showModal(reportDetailModal);
+    }
+
+    function shareCustomerReportAsImage(customerName, reportKey) {
+        const savedData = localStorage.getItem(reportKey);
+        if (!savedData) return;
+
+        const allData = JSON.parse(savedData);
+        const customerData = allData.filter(item => item.name === customerName);
+        const { date, drawTime } = parseReportKey(reportKey);
+        const summary = calculateReportSummary(allData);
+
+        const reportContent = `
+            <html>
+                <head>
+                    <title>Details for ${customerName} on ${date}</title>
+                    <style>
+                        body { font-family: sans-serif; }
+                        table { width: 100%; border-collapse: collapse; font-size: 12pt; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+                        th { background-color: #f2f2f2; }
+                        .col-sold { width: 35%; }
+                        .col-pwt, .col-vc, .col-svc { width: 15%; }
+                        .col-winning { width: 15%; }
+                        .summary-table { margin-top: 30px; }
+                        .summary-table th { text-align: right; width: 85%; }
+                        .summary-table td { font-weight: bold; }
+                    </style>
+                </head>
+                <body>
+                    <h2>Report for ${customerName}</h2>
+                    <h3>Date: ${date} (${drawTime})</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>SEM</th>
+                                <th>Purchase</th>
+                                <th>Unsold</th>
+                                <th class="col-sold">Sold</th>
+                                <th class="col-winning">Winning Tickets</th>
+                                <th class="col-pwt">PWT</th>
+                                <th class="col-vc">VC</th>
+                                <th class="col-svc">SVC</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${customerData.map(row => `
+                                <tr>
+                                    <td>${row.sem}</td>
+                                    <td>${row.purchaseRanges || ''}</td>
+                                    <td>${row.unsoldRaw || ''}</td>
+                                    <td class="col-sold">${formatSoldNumbersForPopup(row.soldNumbers)}</td>
+                                    <td class="col-winning">${formatWinningTicketsForPopup(row.winningTickets)}</td>
+                                    <td class="col-pwt">${(row.pwtBreakdown || []).join('<br>')}</td>
+                                    <td class="col-vc">${(row.vcBreakdown || []).join('<br>')}</td>
+                                    <td class="col-svc">${(row.svcBreakdown || []).join('<br>')}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+
+                    <h2 style="margin-top: 40px;">Draw Summary</h2>
+                    <table class="summary-table">
+                        <tr><th>Total Purchase Count:</th><td>${summary.totalPurchaseCount.toLocaleString('en-IN')}</td></tr>
+                        <tr><th>Total Sold Count:</th><td>${summary.totalSoldCount.toLocaleString('en-IN')}</td></tr>
+                        <tr><th>Total PWT:</th><td>${summary.totalPWT.toLocaleString('en-IN')}</td></tr>
+                        <tr><th>Total VC:</th><td>${summary.totalVC.toLocaleString('en-IN')}</td></tr>
+                        <tr><th>Total SVC:</th><td>${summary.totalSVC.toLocaleString('en-IN')}</td></tr>
+                    </table>
+                </body>
+            </html>
+        `;
+        
+        const reportContainer = document.createElement('div');
+        reportContainer.style.width = '1191px';
+        reportContainer.style.height = '842px';
+        reportContainer.innerHTML = reportContent;
+        document.body.appendChild(reportContainer);
+
+        html2canvas(reportContainer).then(canvas => {
+            document.body.removeChild(reportContainer);
+            canvas.toBlob(blob => {
+                const file = new File([blob], `report-${customerName}-${date}.png`, { type: 'image/png' });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    navigator.share({
+                        files: [file],
+                        title: `Report for ${customerName}`,
+                        text: `Here is the report for ${customerName} on ${date}.`,
+                    })
+                    .catch(error => console.error('Error sharing:', error));
+                } else {
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(file);
+                    link.download = `report-${customerName}-${date}.png`;
+                    link.click();
+                }
+            }, 'image/png');
+        });
     }
 
     function openCustomerDetailPopup(customerName, reportKey) {
@@ -696,7 +947,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Event Handlers ---
-    addCustomerBtn.addEventListener('click', () => { customerNameInput.value = ''; showModal(addCustomerModal); });
+    addCustomerBtn.addEventListener('click', () => {
+        const name = prompt('Enter customer name:');
+        if (name && name.trim()) {
+            const semTypes = ['5', '10', '15', '20'];
+            semTypes.forEach(sem => {
+                addNewRow(name.trim(), sem);
+            });
+        }
+    });
     searchUnsoldBtn.addEventListener('click', () => {
         searchCustomerNameInput.value = '';
         searchUnsoldNumbersInput.value = '';
@@ -704,12 +963,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showModal(searchUnsoldModal);
     });
     document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', (e) => hideModal(e.target.closest('.modal'))));
-    submitCustomerBtn.addEventListener('click', () => {
-        const name = customerNameInput.value.trim();
-        if (!name) return alert('Please enter a customer name.');
-        addNewRow(name, semTypeSelect.value);
-        hideModal(addCustomerModal);
-    });
+    
     
     submitAllDataBtn.addEventListener('click', () => {
         const date = entryDate.value;
@@ -729,42 +983,106 @@ document.addEventListener('DOMContentLoaded', () => {
         searchUnsoldResultsContainer.innerHTML = '';
 
         if (!customerName && searchNumbers.length === 0) {
-            searchUnsoldResultsContainer.innerHTML = '<p>Please enter a customer name or unsold numbers to search.</p>';
+            searchUnsoldResultsContainer.innerHTML = '<p>Please enter a customer name or ticket number(s) to search.</p>';
             return;
         }
 
         let resultsFound = false;
-        tableData.forEach(rowData => {
-            const rowCustomerName = rowData.name.toLowerCase();
-            if (customerName && rowCustomerName !== customerName) {
-                return; // Skip if customer name doesn't match
-            }
 
-            if (rowData.unsoldNumbersWithStatus && rowData.unsoldNumbersWithStatus.length > 0) {
-                const matchingUnsold = searchNumbers.length > 0
-                    ? rowData.unsoldNumbersWithStatus.filter(item => searchNumbers.includes(item.number))
-                    : rowData.unsoldNumbersWithStatus;
+        if (customerName && searchNumbers.length === 0) {
+            // Search by customer name only
+            const customerData = tableData.filter(row => row.name.toLowerCase() === customerName);
+            if (customerData.length > 0) {
+                resultsFound = true;
+                const customerResultDiv = document.createElement('div');
+                customerResultDiv.classList.add('search-result-item');
+                
+                let html = `<h4>${customerData[0].name}</h4>`;
 
-                if (matchingUnsold.length > 0) {
-                    resultsFound = true;
-                    const customerResultDiv = document.createElement('div');
-                    customerResultDiv.classList.add('search-result-item');
-                    customerResultDiv.innerHTML = `
-                        <h4>${rowData.name} (SEM: ${rowData.sem})</h4>
-                        <p>Unsold Tickets:</p>
-                        <div class="sold-chip-container">
-                            ${matchingUnsold.map(item => `<span class="sold-chip ${!item.isValid ? 'invalid-number' : ''}">${item.number}</span>`).join('')}
-                        </div>
-                    `;
-                    searchUnsoldResultsContainer.appendChild(customerResultDiv);
+                const allUnsold = customerData.flatMap(row => row.unsoldNumbers || []);
+                const allSold = customerData.flatMap(row => row.soldNumbers || []);
+                const allWinning = customerData.flatMap(row => row.winningTickets || []);
+
+                if (allUnsold.length > 0) {
+                    html += `<p>Unsold Tickets:</p><div class="sold-chip-container">${allUnsold.map(n => `<span class="sold-chip">${n}</span>`).join('')}</div>`;
                 }
-            }
-        });
+                if (allSold.length > 0) {
+                    html += `<p>Sold Tickets:</p><div class="sold-chip-container">${allSold.map(n => `<span class="sold-chip">${getNumericDisplay(n)}</span>`).join('')}</div>`;
+                }
+                if (allWinning.length > 0) {
+                    html += `<p>Winning Tickets:</p><div class="sold-chip-container">${allWinning.map(wt => `<span class="sold-chip winning-chip ${getCategoryClass(wt.category)}">${wt.ticket}</span>`).join(' ')}</div>`;
+                }
 
-        if (!resultsFound) {
-            searchUnsoldResultsContainer.innerHTML = '<p>No matching unsold tickets found.</p>';
+                if (allUnsold.length === 0 && allSold.length === 0) {
+                    html += '<p>No tickets found for this customer.</p>';
+                }
+
+                customerResultDiv.innerHTML = html;
+                searchUnsoldResultsContainer.appendChild(customerResultDiv);
+            }
+        } else if (searchNumbers.length > 0) {
+            // Search by ticket number(s)
+            searchNumbers.forEach(number => {
+                let foundInPurchase = false;
+                tableData.forEach(rowData => {
+                    const purchaseSet = new Set();
+                    const purchaseRanges = (rowData.purchaseRanges || '').split(',').map(r => r.trim()).filter(Boolean);
+                    for (const range of purchaseRanges) {
+                        const parts = range.split('-').map(p => p.trim());
+                        if (parts.length === 2) {
+                            const parsedFrom = parseAlphanumericTicket(parts[0]);
+                            const parsedTo = parseAlphanumericTicket(parts[1]);
+                            const numericFrom = parsedFrom.numericPart;
+                            const numericTo = parsedTo.numericPart;
+                            if (!isNaN(numericFrom) && !isNaN(numericTo) && numericTo >= numericFrom) {
+                                for (let i = numericFrom; i <= numericTo; i++) {
+                                    purchaseSet.add(formatAlphanumericTicket(parsedFrom.prefix, i, parsedFrom.padding, parsedFrom.suffix));
+                                }
+                            }
+                        } else if (parts.length === 1) {
+                            purchaseSet.add(parts[0]);
+                        }
+                    }
+
+                    if (purchaseSet.has(number)) {
+                        foundInPurchase = true;
+                        resultsFound = true;
+                        let status = 'Sold';
+                        if ((rowData.unsoldNumbers || []).includes(number)) {
+                            status = 'Unsold';
+                        }
+                        
+                        let winningInfo = '';
+                        const winningTicket = (rowData.winningTickets || []).find(wt => number.endsWith(wt.ticket));
+                        if (winningTicket) {
+                            winningInfo = ` - <span class="winning-chip ${getCategoryClass(winningTicket.category)}">Winning Ticket (${winningTicket.category})</span>`;
+                        }
+
+                        const ticketResultDiv = document.createElement('div');
+                        ticketResultDiv.classList.add('search-result-item');
+                        ticketResultDiv.innerHTML = `
+                            <h4>Ticket: ${number}</h4>
+                            <p>Customer: ${rowData.name} (SEM: ${rowData.sem})</p>
+                            <p>Status: ${status}${winningInfo}</p>
+                        `;
+                        searchUnsoldResultsContainer.appendChild(ticketResultDiv);
+                    }
+                });
+                if (!foundInPurchase) {
+                     const ticketResultDiv = document.createElement('div');
+                        ticketResultDiv.classList.add('search-result-item');
+                        ticketResultDiv.innerHTML = `<h4>Ticket: ${number}</h4><p>Not found in any purchase.</p>`;
+                        searchUnsoldResultsContainer.appendChild(ticketResultDiv);
+                }
+            });
+        }
+
+        if (!resultsFound && !(customerName && searchNumbers.length === 0)) {
+            searchUnsoldResultsContainer.innerHTML = '<p>No matching entries found.</p>';
         }
     });
+
+
 
     customerTableBody.addEventListener('change', (e) => {
         const target = e.target;
@@ -792,6 +1110,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (rowData) {
                 editCustomerNameInput.value = rowData.name;
                 editSemTypeSelect.value = rowData.sem;
+                editPurchaseInput.value = rowData.purchaseRanges || '';
+                editUnsoldInput.value = rowData.unsoldRaw || '';
                 updateCustomerBtn.dataset.rowIndex = rowIndex;
                 showModal(editCustomerModal);
             }
@@ -810,11 +1130,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     customerListContainer.addEventListener('click', (e) => {
-        const item = e.target.closest('.customer-list-item');
-        if (item) {
-            const customerName = item.dataset.customerName;
-            const reportKey = item.dataset.reportKey;
-            openCustomerDetailPopup(customerName, reportKey);
+        const target = e.target;
+        if (target.classList.contains('share-customer-report')) {
+            e.stopPropagation();
+            const customerName = target.dataset.customerName;
+            const reportKey = target.dataset.reportKey;
+            shareCustomerReportAsImage(customerName, reportKey);
+        } else {
+            const item = e.target.closest('.customer-list-item');
+            if (item) {
+                const customerName = item.dataset.customerName;
+                const reportKey = item.dataset.reportKey;
+                openCustomerDetailPopup(customerName, reportKey);
+            }
         }
     });
 
@@ -851,6 +1179,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const rowIndex = parseInt(updateCustomerBtn.dataset.rowIndex, 10);
         const newName = editCustomerNameInput.value.trim();
         const newSem = editSemTypeSelect.value;
+        const newPurchase = editPurchaseInput.value.trim();
+        const newUnsold = editUnsoldInput.value.trim();
 
         if (!newName) {
             alert('Please enter a customer name.');
@@ -858,10 +1188,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (rowIndex >= 0 && rowIndex < tableData.length) {
-            tableData[rowIndex].name = newName;
-            tableData[rowIndex].sem = newSem;
+            const rowData = tableData[rowIndex];
+            rowData.name = newName;
+            rowData.sem = newSem;
+            rowData.purchaseRanges = newPurchase;
+            rowData.unsoldRaw = newUnsold;
+            
             hideModal(editCustomerModal);
-            renderTable();
+            updateRowData(rowIndex);
         }
     });
     

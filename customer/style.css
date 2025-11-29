@@ -1,19 +1,20 @@
 :root {
-    --primary-color: #2c3e50;
-    --secondary-color: #3498db;
-    --background-color: #ecf0f1;
-    --white-color: #ffffff;
-    --light-gray-color: #bdc3c7;
-    --dark-gray-color: #7f8c8d;
-    --error-color: #e74c3c;
-    --success-color: #2ecc71;
+    --primary-color: #5E5DF0;
+    --secondary-color: #4A4A4A;
+    --background-color: #F5F7FA;
+    --white-color: #FFFFFF;
+    --light-gray-color: #E1E8ED;
+    --dark-gray-color: #657786;
+    --error-color: #E0245E;
+    --success-color: #17BF63;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     background-color: var(--background-color);
     margin: 0;
     padding: 20px;
+    background-image: linear-gradient(to top, #f3e7e9 0%, #e3eeff 99%, #e3eeff 100%);
 }
 
 .app-container {
@@ -26,36 +27,55 @@ body {
 }
 
 .app-header {
-    background-color: var(--primary-color);
-    color: var(--white-color);
-    padding: 20px;
+    background-color: var(--white-color);
+    color: var(--secondary-color);
+    padding: 20px 40px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid var(--light-gray-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .app-header h1 {
     margin: 0;
-    font-size: 1.5em;
+    font-size: 1.8em;
+    font-weight: 600;
 }
 
 .header-controls {
     display: flex;
     gap: 15px;
+    align-items: center;
 }
 
 .header-controls select, .header-controls input, .header-controls button {
-    padding: 8px;
-    border-radius: 4px;
+    padding: 10px 15px;
+    border-radius: 8px;
     border: 1px solid var(--light-gray-color);
     background-color: var(--white-color);
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+}
+
+.header-controls select:hover, .header-controls input:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 5px rgba(94, 93, 240, 0.2);
 }
 
 #view-result-btn {
     background-color: var(--primary-color);
     color: var(--white-color);
     cursor: pointer;
+    font-weight: 500;
 }
+#view-result-btn:hover {
+    background-color: #4a49d3;
+    box-shadow: 0 4px 10px rgba(94, 93, 240, 0.3);
+    transform: translateY(-2px);
+}
+
 
 .app-main {
     padding: 20px;
@@ -70,19 +90,34 @@ body {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.9em;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    border-radius: 12px;
+    overflow: hidden;
 }
 
 #customer-table th, #customer-table td, #prize-result-table th, #prize-result-table td {
-    border: 1px solid #ddd;
-    padding: 10px;
+    padding: 15px 20px;
     text-align: left;
     white-space: nowrap;
+    border-bottom: 1px solid var(--light-gray-color);
+}
+
+#customer-table thead tr, #prize-result-table thead tr {
+    background-color: var(--white-color);
 }
 
 #customer-table th, #prize-result-table th {
-    background-color: #f2f2f2;
     font-weight: 600;
+    color: var(--dark-gray-color);
+    text-transform: uppercase;
+    font-size: 0.8em;
+    letter-spacing: 0.5px;
 }
+
+#customer-table tbody tr:hover, #prize-result-table tbody tr:hover {
+    background-color: #F8F9FA;
+}
+
 
 #customer-table input[type="text"], #customer-table input[type="number"] {
     width: 90%;
@@ -105,7 +140,7 @@ body {
     white-space: normal;
 }
 
-.sold-more-link {
+.sold-more-link, .unsold-more-link, .purchase-more-link, .winning-more-link {
     color: var(--secondary-color);
     cursor: pointer;
     font-weight: bold;
@@ -194,19 +229,64 @@ body {
     align-items: center;
 }
 
-#add-customer-btn, #submit-all-data-btn {
-    background-color: var(--secondary-color);
-    color: var(--white-color);
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1em;
+.action-icons {
+    display: flex;
+    gap: 10px; /* Space between icons */
+    justify-content: center; /* Center icons in the cell */
+    align-items: center;
 }
 
-#add-customer-btn:hover, #submit-all-data-btn:hover {
-    opacity: 0.9;
+.action-icons i {
+    cursor: pointer;
+    font-size: 1.1em;
+    transition: color 0.2s ease, transform 0.2s ease;
+    padding: 5px; /* Increase clickable area */
+    border-radius: 50%; /* Make it circular */
 }
+
+/* Specific colors for icons */
+.delete-customer, .delete-sem-row {
+    color: var(--error-color);
+}
+
+.edit-sem-row {
+    color: var(--secondary-color);
+}
+
+.action-icons i:hover {
+    transform: scale(1.2);
+    opacity: 0.8;
+}
+
+.summary-row {
+    font-weight: bold;
+    background-color: #f2f2f2;
+}
+
+#add-customer-btn, #submit-all-data-btn, #search-unsold-btn {
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+#add-customer-btn:hover, #submit-all-data-btn:hover, #search-unsold-btn:hover {
+    background-color: #4a49d3;
+    box-shadow: 0 4px 12px rgba(94, 93, 240, 0.4);
+    transform: translateY(-2px);
+}
+
+#add-customer-btn:active, #submit-all-data-btn:active, #search-unsold-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
 
 /* Modal Styles */
 .modal {
@@ -217,19 +297,31 @@ body {
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.5);
+    background-color: rgba(0,0,0,0.4);
     justify-content: center;
     align-items: center;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .modal-content {
     background: var(--white-color);
     padding: 30px;
-    border-radius: 8px;
-    width: 90%; /* Flexible width */
-    max-width: 500px; /* Increased max-width for better table display */
-    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-    position: relative; /* Needed for absolute positioning of close button */
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    position: relative;
+    animation: scaleUp 0.3s ease-in-out;
+}
+
+@keyframes scaleUp {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
 }
 
 .modal-content.small-modal {
@@ -274,9 +366,18 @@ body {
 
 .form-group input, .form-group select {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     border: 1px solid var(--light-gray-color);
-    border-radius: 4px;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1em;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus, .form-group select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 8px rgba(94, 93, 240, 0.3);
 }
 
 .modal-actions {
@@ -287,21 +388,46 @@ body {
 }
 
 .modal-actions button {
-    padding: 10px 20px;
+    padding: 12px 24px;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
-    font-weight: bold;
+    font-weight: 500;
+    transition: all 0.3s ease;
 }
 
-#submit-customer-btn, #add-same-sem-btn, #add-different-sem-btn {
-    background-color: var(--secondary-color);
+#submit-customer-btn, #add-same-sem-btn, #add-different-sem-btn, #update-customer-btn, #submit-search-unsold-btn {
+    background-color: var(--primary-color);
     color: var(--white-color);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+#submit-customer-btn:hover, #add-same-sem-btn:hover, #add-different-sem-btn:hover, #update-customer-btn:hover, #submit-search-unsold-btn:hover {
+    background-color: #4a49d3;
+    box-shadow: 0 4px 12px rgba(94, 93, 240, 0.4);
+    transform: translateY(-2px);
 }
 
 .close-modal-btn {
     background-color: var(--light-gray-color);
+    color: var(--dark-gray-color);
 }
+
+.close-modal-btn:hover {
+    background-color: #CFD8DC;
+}
+
+.danger-btn {
+    background-color: var(--error-color);
+    color: var(--white-color);
+}
+
+.danger-btn:hover {
+    background-color: #C81E51;
+    box-shadow: 0 4px 12px rgba(224, 36, 94, 0.4);
+    transform: translateY(-2px);
+}
+
 
 /* Report Section Styles */
 .report-section {
@@ -345,30 +471,33 @@ body {
 }
 
 .report-card {
-    background-color: var(--white-color);
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    padding: 15px;
+    background-image: linear-gradient(to top, #fff1eb 0%, #ace0f9 100%);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    padding: 25px;
     cursor: pointer;
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    transition: all 0.3s ease-in-out;
     text-align: center;
+    border: 1px solid var(--light-gray-color);
 }
 
 .report-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+    transform: translateY(-8px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
 }
 
 .report-card h3 {
     margin: 0;
-    color: var(--secondary-color);
-    font-size: 1.3em;
+    color: var(--primary-color);
+    font-size: 1.4em;
+    font-weight: 600;
 }
 
 .report-card p {
-    margin: 5px 0 0;
+    margin: 8px 0 0;
     color: var(--dark-gray-color);
     font-weight: 500;
+    font-size: 0.9em;
 }
 
 /* Customer List in Report Modal */
@@ -386,6 +515,20 @@ body {
     cursor: pointer;
     font-weight: 500;
     transition: background-color 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.share-customer-report {
+    color: var(--secondary-color);
+    font-size: 1.2em;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.share-customer-report:hover {
+    color: var(--primary-color);
+    transform: scale(1.1);
 }
 
 .customer-list-item:hover {
