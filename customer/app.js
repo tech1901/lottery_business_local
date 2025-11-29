@@ -55,6 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- State Management ---
     let tableData = [];
     let currentCustomer = null;
+    let currentDrawTime = null;
+    let currentEntryDate = null;
 
     // --- Utility Functions ---
     const showModal = (modal) => modal.style.display = 'flex';
@@ -647,53 +649,16 @@ document.addEventListener('DOMContentLoaded', () => {
         loadAndRenderReportCards(date);
     }
 
-    function loadData(date, isInitialLoad = false) {
-        let dataToLoad = [];
-        let reportKeyToLoad = null;
+    function loadData(date, drawTime) {
+        const reportKey = getReportKey(date, drawTime);
+        const savedData = localStorage.getItem(reportKey);
 
-        const allReportKeys = Object.keys(localStorage).filter(key => key.startsWith('customerReports_'));
-        allReportKeys.sort().reverse();
-        const latestReportKey = allReportKeys.length > 0 ? allReportKeys[0] : null;
-
-        if (isInitialLoad && latestReportKey) {
-            reportKeyToLoad = latestReportKey;
+        if (savedData) {
+            tableData = JSON.parse(savedData);
         } else {
-            const selectedDate = date;
-            const latestReportDate = latestReportKey ? parseReportKey(latestReportKey).date : null;
-
-            if (latestReportKey && selectedDate > latestReportDate) {
-                const lastReportData = JSON.parse(localStorage.getItem(latestReportKey));
-                // The user wants all previous day's entry data (inputs)
-                dataToLoad = lastReportData.map(row => ({
-                    name: row.name,
-                    sem: row.sem,
-                    purchaseRanges: row.purchaseRanges || '', // Carry over purchaseRanges
-                    unsoldRaw: row.unsoldRaw || ''        // Carry over unsoldRaw
-                    // Calculated fields (soldRanges, soldNumbers, winningTickets, pwtBreakdown, vcBreakdown, svcBreakdown)
-                    // will be cleared and recalculated by updateRowData because they are not explicitly carried over here.
-                }));
-            } else {
-                const dailyCustomersKey = getDailyCustomersKey(selectedDate);
-                const dailyCustomersRaw = localStorage.getItem(dailyCustomersKey);
-                if (dailyCustomersRaw) {
-                    const dailyCustomers = JSON.parse(dailyCustomersRaw);
-                    dataToLoad = dailyCustomers.map(customer => ({
-                        name: customer.name,
-                        sem: customer.sem, // Carry over SEM value from dailyCustomers list
-                        purchaseFrom: '',  // Clear daily fields
-                        purchaseTo: '',    // Clear daily fields
-                        unsoldRaw: '',     // Clear daily fields
-                    }));
-                }
-            }
+            tableData = [];
         }
 
-        if (reportKeyToLoad) {
-            dataToLoad = JSON.parse(localStorage.getItem(reportKeyToLoad));
-        }
-        console.log("Data to load:", dataToLoad); // Added console.log here
-
-        tableData = dataToLoad;
         tableData.forEach((_, index) => updateRowData(index));
         renderTable();
     }
@@ -1147,12 +1112,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     entryDate.addEventListener('change', () => {
-        loadData(entryDate.value);
+        const oldKey = getReportKey(currentEntryDate, currentDrawTime);
+        if (tableData.length > 0) {
+            localStorage.setItem(oldKey, JSON.stringify(tableData));
+        }
+        currentEntryDate = entryDate.value;
+        loadData(entryDate.value, drawTimeSelect.value);
         loadAndRenderReportCards(entryDate.value);
     });
 
     drawTimeSelect.addEventListener('change', () => {
-        tableData.forEach((_, i) => updateRowData(i));
+        const oldKey = getReportKey(entryDate.value, currentDrawTime);
+        if (tableData.length > 0) {
+            localStorage.setItem(oldKey, JSON.stringify(tableData));
+        }
+        currentDrawTime = drawTimeSelect.value;
+        loadData(entryDate.value, drawTimeSelect.value);
     });
 
     viewResultBtn.addEventListener('click', () => {
@@ -1201,6 +1176,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Initial Setup ---
     setCurrentDate();
-    loadData(entryDate.value, true);
-    loadAndRenderReportCards(entryDate.value);
+    currentEntryDate = entryDate.value;
+    currentDrawTime = drawTimeSelect.value;
+    loadData(currentEntryDate, currentDrawTime);
+    loadAndRenderReportCards(currentEntryDate);
 });
