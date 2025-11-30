@@ -243,7 +243,14 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (result.category.includes('2nd')) {
                 const match = text.match(/\b\d{5}\b/g);
                 if (match) numbers = match.join(', ');
-            } else {
+            } else if (result.category.includes('5th')) {
+                // For 5th prize, use a more lenient regex to capture all numbers from the large text block
+                let match = text.match(/\d{4}/g);
+                if (!match || match.length === 0) {
+                    match = text.match(/\d{3}/g);
+                }
+                if (match) numbers = match.join(', ');
+            } else { // For 3rd and 4th prizes
                 let match = text.match(/\b\d{4}\b/g);
                 if (!match || match.length === 0) match = text.match(/\b\d{3}\b/g);
                 if (match) numbers = match.join(', ');
@@ -340,16 +347,41 @@ document.addEventListener('DOMContentLoaded', () => {
             const key = draws[drawTime];
             const li = document.createElement('li');
             const option = Array.from(drawTimeSelect.options).find(opt => opt.value === drawTime);
-            li.textContent = option ? option.text : drawTime;
-            li.dataset.key = key;
+            
+            const textSpan = document.createElement('span');
+            textSpan.textContent = option ? option.text : drawTime;
+            li.appendChild(textSpan);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.className = 'delete-draw-btn';
+            deleteBtn.dataset.key = key;
+            li.appendChild(deleteBtn);
+            
+            li.dataset.key = key; // For viewing by clicking the li
             modalDrawsList.appendChild(li);
         }
         drawsModal.style.display = 'block';
     }
 
     function handleModalDrawClick(event) {
-        if (event.target.tagName === 'LI') {
-            const key = event.target.dataset.key;
+        const target = event.target;
+
+        // Handle delete button click
+        if (target.classList.contains('delete-draw-btn')) {
+            const key = target.dataset.key;
+            if (confirm('Are you sure you want to delete this saved result?')) {
+                localStorage.removeItem(key);
+                loadReports(); // Refresh the main list
+                drawsModal.style.display = 'none'; // Close modal
+            }
+            return; // Stop further processing
+        }
+
+        // Handle viewing by clicking the list item (but not the button)
+        const li = target.closest('li');
+        if (li && li.dataset.key) {
+            const key = li.dataset.key;
             const data = JSON.parse(localStorage.getItem(key));
             if (data) {
                 resultDateInput.value = data.date;

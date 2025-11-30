@@ -218,8 +218,25 @@ h1, h2 {
     margin-bottom: 8px;
     cursor: pointer;
     border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 #modal-draws-list li:hover {
     background: #f0f0f0;
+}
+
+.delete-draw-btn {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.delete-draw-btn:hover {
+    background-color: #c0392b;
 }
