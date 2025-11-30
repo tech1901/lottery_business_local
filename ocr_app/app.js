@@ -112,10 +112,13 @@ document.addEventListener('DOMContentLoaded', () => {
         let isDragging = false, isResizing = false;
         let startX, startY, initialX, initialY, initialWidth, initialHeight;
 
+        const getClientX = (e) => e.touches ? e.touches[0].clientX : e.clientX;
+        const getClientY = (e) => e.touches ? e.touches[0].clientY : e.clientY;
+
         const dragStart = (e) => {
             isDragging = true;
-            const clientX = e.clientX || e.touches[0].clientX;
-            const clientY = e.clientY || e.touches[0].clientY;
+            const clientX = getClientX(e);
+            const clientY = getClientY(e);
             startX = clientX;
             startY = clientY;
             initialX = element.offsetLeft;
@@ -126,8 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const resizeStart = (e) => {
             isResizing = true;
-            const clientX = e.clientX || e.touches[0].clientX;
-            const clientY = e.clientY || e.touches[0].clientY;
+            const clientX = getClientX(e);
+            const clientY = getClientY(e);
             startX = clientX;
             startY = clientY;
             initialWidth = element.offsetWidth;
@@ -136,8 +139,8 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         const move = (e) => {
-            const clientX = e.clientX || e.touches[0].clientX;
-            const clientY = e.clientY || e.touches[0].clientY;
+            const clientX = getClientX(e);
+            const clientY = getClientY(e);
 
             if (isDragging) {
                 const dx = clientX - startX, dy = clientY - startY;
